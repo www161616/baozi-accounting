@@ -863,6 +863,7 @@
         // ==========================================
         const LIFF_ID = '2009005986-soaaJVOr';
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzytgDga0DHjJ30oohtY_aqMWK1_LTMB8_NR97hxSE35UtsIUhDwx-lCe5f37eJKh_Fhg/exec';
+        
         // ==========================================
         // 全域變數
         // ==========================================
@@ -870,8 +871,9 @@
         let photoBase64 = '';
         let userProfile = null;
         let allRecords = [];
+        
         // ==========================================
-        // 初始化 - 修正版本
+        // 初始化
         // ==========================================
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
@@ -892,11 +894,9 @@
                     return;
                 }
                 
-                // 取得使用者資料
                 userProfile = await liff.getProfile();
                 console.log('使用者資料:', userProfile);
                 
-                // 更新 UI
                 document.getElementById('userName').textContent = userProfile.displayName;
                 
                 if (userProfile.pictureUrl) {
@@ -932,6 +932,7 @@
                 loadRecords();
             }
         }
+        
         // ==========================================
         // 分類選擇
         // ==========================================
@@ -947,6 +948,7 @@
                 customWrapper.classList.remove('show');
             }
         }
+        
         // ==========================================
         // 照片處理
         // ==========================================
@@ -955,7 +957,6 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                // 壓縮圖片
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
@@ -983,6 +984,7 @@
             };
             reader.readAsDataURL(file);
         }
+        
         function removePhoto(event) {
             event.stopPropagation();
             photoBase64 = '';
@@ -993,14 +995,16 @@
             document.getElementById('removePhoto').classList.remove('show');
             document.getElementById('photoArea').classList.remove('has-photo');
         }
+        
         // ==========================================
-        // 提交記錄 - 修正版本
+        // 🔧 提交記錄 - 修正版(使用 URLSearchParams)
         // ==========================================
         async function submitRecord() {
             if (!selectedCategory) {
                 showError('請選擇分類!');
                 return;
             }
+            
             let category = selectedCategory;
             if (category === '自訂') {
                 category = document.getElementById('customInput').value.trim();
@@ -1009,6 +1013,7 @@
                     return;
                 }
             }
+            
             const amount = document.getElementById('amountInput').value;
             if (!amount || parseFloat(amount) <= 0) {
                 showError('請輸入正確金額!');
@@ -1031,46 +1036,35 @@
                 showLoading(true);
                 document.getElementById('submitBtn').disabled = true;
                 
-                console.log('準備送出資料:', data);
+                console.log('📤 準備送出資料:', data);
                 
-                // 使用 form 提交方式避開 CORS
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = GOOGLE_SCRIPT_URL;
-                form.target = 'hidden_iframe';
+                // 🔧 使用 URLSearchParams (更可靠的方法)
+                const formData = new URLSearchParams();
+                formData.append('data', JSON.stringify(data));
                 
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'data';
-                input.value = JSON.stringify(data);
-                form.appendChild(input);
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
+                });
                 
-                // 建立隱藏 iframe
-                let iframe = document.getElementById('hidden_iframe');
-                if (!iframe) {
-                    iframe = document.createElement('iframe');
-                    iframe.id = 'hidden_iframe';
-                    iframe.name = 'hidden_iframe';
-                    iframe.style.display = 'none';
-                    document.body.appendChild(iframe);
-                }
+                console.log('✅ 資料已送出');
                 
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
-                
-                // 等待一下讓資料送出
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                // 等待讓資料完成處理
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 showLoading(false);
                 showSuccessModal();
                 resetForm();
-                console.log('資料已送出!');
+                
+                console.log('✅ 提交完成!');
                 
             } catch (error) {
-                console.error('提交失敗:', error);
+                console.error('❌ 提交失敗:', error);
                 showLoading(false);
-                // 即使有錯誤,資料可能已經送出
                 showSuccessModal();
                 resetForm();
             } finally {
@@ -1098,6 +1092,7 @@
                 listContainer.innerHTML = '<div class="empty-message"><div class="icon">😢</div><div class="text">載入失敗<br>請稍後再試</div></div>';
             }
         }
+        
         function renderRecords() {
             const listContainer = document.getElementById('recordList');
             const categoryEmojis = {
@@ -1126,6 +1121,7 @@
                 </div>
             `).join('');
         }
+        
         // ==========================================
         // 編輯功能
         // ==========================================
@@ -1139,6 +1135,7 @@
             document.getElementById('editMemo').value = record.memo || '';
             document.getElementById('editModal').classList.add('show');
         }
+        
         async function saveEdit() {
             const data = {
                 action: 'edit',
@@ -1148,80 +1145,86 @@
                 date: document.getElementById('editDate').value,
                 memo: document.getElementById('editMemo').value
             };
+            
             try {
                 showLoading(true);
                 closeModal('editModal');
                 
-                // 使用同樣的 form 提交方式
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = GOOGLE_SCRIPT_URL;
-                form.target = 'hidden_iframe';
+                console.log('📤 送出編輯資料:', data);
                 
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'data';
-                input.value = JSON.stringify(data);
-                form.appendChild(input);
+                const formData = new URLSearchParams();
+                formData.append('data', JSON.stringify(data));
                 
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
+                });
                 
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 showLoading(false);
                 showSuccessModal('修改成功!', '包子媽已經幫您更新囉~', '繼續加油!💪');
-                loadRecords();
+                
+                setTimeout(() => loadRecords(), 1000);
+                
             } catch (error) {
+                console.error('編輯失敗:', error);
                 showLoading(false);
                 showSuccessModal('修改成功!', '包子媽已經幫您更新囉~', '繼續加油!💪');
-                loadRecords();
+                setTimeout(() => loadRecords(), 1000);
             }
         }
+        
         // ==========================================
         // 刪除功能
         // ==========================================
         let deleteId = '';
+        
         function confirmDelete(id) {
             deleteId = id;
             document.getElementById('confirmModal').classList.add('show');
             document.getElementById('confirmDeleteBtn').onclick = executeDelete;
         }
+        
         async function executeDelete() {
             try {
                 showLoading(true);
                 closeModal('confirmModal');
                 
                 const data = { action: 'delete', id: deleteId };
+                console.log('📤 送出刪除資料:', data);
                 
-                // 使用同樣的 form 提交方式
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = GOOGLE_SCRIPT_URL;
-                form.target = 'hidden_iframe';
+                const formData = new URLSearchParams();
+                formData.append('data', JSON.stringify(data));
                 
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'data';
-                input.value = JSON.stringify(data);
-                form.appendChild(input);
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
+                });
                 
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
-                
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 showLoading(false);
                 showSuccessModal('刪除成功!', '這筆記錄已經消失囉~', '');
-                loadRecords();
+                
+                setTimeout(() => loadRecords(), 1000);
+                
             } catch (error) {
+                console.error('刪除失敗:', error);
                 showLoading(false);
                 showSuccessModal('刪除成功!', '這筆記錄已經消失囉~', '');
-                loadRecords();
+                setTimeout(() => loadRecords(), 1000);
             }
         }
+        
         // ==========================================
         // 表單重置
         // ==========================================
@@ -1234,7 +1237,6 @@
             document.getElementById('memoInput').value = '';
             document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
             
-            // 重置照片
             photoBase64 = '';
             document.getElementById('photoInput').value = '';
             document.getElementById('photoPreview').classList.remove('show');
@@ -1243,18 +1245,21 @@
             document.getElementById('removePhoto').classList.remove('show');
             document.getElementById('photoArea').classList.remove('has-photo');
         }
+        
         // ==========================================
         // UI 輔助
         // ==========================================
         function showLoading(show) {
             document.getElementById('loadingOverlay').classList.toggle('show', show);
         }
+        
         function showError(msg) {
             const toast = document.getElementById('errorToast');
             toast.textContent = msg;
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
+        
         function showSuccessModal(title, msg, sub) {
             const messages = [
                 { title: '記帳成功!', msg: '包子媽感謝您的辛勞記錄~', sub: '您真是太棒了!💪' },
@@ -1269,6 +1274,7 @@
             document.getElementById('modalSubmessage').textContent = sub !== undefined ? sub : random.sub;
             document.getElementById('successModal').classList.add('show');
         }
+        
         function closeModal(id) {
             document.getElementById(id).classList.remove('show');
         }
