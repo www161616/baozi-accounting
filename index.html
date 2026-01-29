@@ -1233,7 +1233,15 @@
             document.getElementById('amountInput').value = '';
             document.getElementById('memoInput').value = '';
             document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
-            removePhoto(new Event('click'));
+            
+            // 重置照片
+            photoBase64 = '';
+            document.getElementById('photoInput').value = '';
+            document.getElementById('photoPreview').classList.remove('show');
+            document.getElementById('photoIcon').style.display = 'block';
+            document.getElementById('photoText').style.display = 'block';
+            document.getElementById('removePhoto').classList.remove('show');
+            document.getElementById('photoArea').classList.remove('has-photo');
         }
         // ==========================================
         // UI 輔助
