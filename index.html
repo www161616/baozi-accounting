@@ -80,7 +80,6 @@
         .content-wrapper {
             padding-bottom: 40px;
         }
-
         /* 頂部標題 */
         .header {
             background: linear-gradient(135deg, var(--pink-dark) 0%, var(--pink-accent) 50%, var(--pink-deep) 100%);
@@ -603,13 +602,31 @@
             color: var(--text-medium);
             margin-bottom: 20px;
         }
+        
+        /* 🔧 成功彈窗的兩個按鈕 */
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
         .modal-close-btn {
-            width: 100%;
+            flex: 1;
             padding: 14px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: white;
             background: linear-gradient(135deg, var(--green-accent), #4DAA7A);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .modal-another-btn {
+            flex: 1;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, var(--pink-accent), var(--pink-deep));
             border: none;
             border-radius: 12px;
             cursor: pointer;
@@ -762,14 +779,17 @@
     <!-- 錯誤提示 -->
     <div class="error-toast" id="errorToast"></div>
     
-    <!-- 成功彈窗 -->
+    <!-- 🔧 成功彈窗 - 新增「再記一筆」按鈕 -->
     <div class="modal-overlay" id="successModal">
         <div class="modal-content">
             <div class="modal-icon">🎉</div>
             <div class="modal-title" id="modalTitle">記帳成功!</div>
             <div class="modal-message" id="modalMessage">包子媽感謝您的辛勞記錄~</div>
             <div class="modal-submessage" id="modalSubmessage">您真是太棒了!💪</div>
-            <button class="modal-close-btn" onclick="closeModal('successModal')">好的!😊</button>
+            <div class="modal-buttons" id="modalButtons">
+                <button class="modal-close-btn" onclick="closeModal('successModal')">好的!😊</button>
+                <button class="modal-another-btn" id="anotherBtn" onclick="addAnother()">再記一筆 ➕</button>
+            </div>
         </div>
     </div>
     
@@ -813,7 +833,6 @@
             </div>
         </div>
     </div>
-
     <!-- 🔧 可捲動的容器 -->
     <div class="scroll-container">
         <div class="content-wrapper">
@@ -935,7 +954,6 @@
             </div>
         </div>
     </div>
-
     <script>
         // ==========================================
         // 📌 設定區
@@ -950,6 +968,7 @@
         let photoBase64 = '';
         let userProfile = null;
         let allRecords = [];
+        let showAnotherButton = true; // 控制是否顯示「再記一筆」按鈕
         
         // ==========================================
         // 初始化
@@ -958,7 +977,6 @@
             document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
             await initLiff();
         });
-
         async function initLiff() {
             try {
                 showLoading(true);
@@ -995,7 +1013,6 @@
                 showError('LINE 登入失敗,請重新整理');
             }
         }
-
         // ==========================================
         // 分頁切換
         // ==========================================
@@ -1049,7 +1066,7 @@
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    // 🔧 縮小尺寸：最大 600px（原本 800px）
+                    // 🔧 縮小尺寸：最大 600px
                     const maxWidth = 600;
                     const maxHeight = 600;
                     let width = img.width;
@@ -1072,7 +1089,7 @@
                     canvas.height = height;
                     canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     
-                    // 🔧 降低品質：0.5（原本 0.7）- 大幅減少檔案大小
+                    // 🔧 降低品質：0.5 減少檔案大小
                     photoBase64 = canvas.toDataURL('image/jpeg', 0.5);
                     
                     console.log('📸 照片大小: ' + Math.round(photoBase64.length / 1024) + ' KB');
@@ -1123,7 +1140,6 @@
                 showError('請輸入正確金額!');
                 return;
             }
-
             const data = {
                 action: 'add',
                 userName: userProfile?.displayName || '訪客',
@@ -1135,7 +1151,6 @@
                 photo: photoBase64,
                 timestamp: new Date().toISOString()
             };
-
             try {
                 // 🔧 如果有照片，顯示上傳提示
                 const hasPhoto = photoBase64.length > 500;
@@ -1164,19 +1179,35 @@
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 showLoading(false);
+                showAnotherButton = true; // 記帳成功時顯示「再記一筆」
                 showSuccessModal();
                 resetForm();
                 
             } catch (error) {
                 console.error('❌ 提交失敗:', error);
                 showLoading(false);
+                showAnotherButton = true;
                 showSuccessModal();
                 resetForm();
             } finally {
                 document.getElementById('submitBtn').disabled = false;
             }
         }
-
+        
+        // ==========================================
+        // 🔧 再記一筆
+        // ==========================================
+        function addAnother() {
+            closeModal('successModal');
+            resetForm();
+            // 捲動到頂部
+            document.querySelector('.scroll-container').scrollTop = 0;
+            // 聚焦到金額輸入框
+            setTimeout(() => {
+                document.getElementById('amountInput').focus();
+            }, 300);
+        }
+        
         // ==========================================
         // 載入記錄
         // ==========================================
@@ -1281,6 +1312,7 @@
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 showLoading(false);
+                showAnotherButton = false; // 編輯成功不顯示「再記一筆」
                 showSuccessModal('修改成功!', '包子媽已經幫您更新囉~', '繼續加油!💪');
                 
                 setTimeout(() => loadRecords(), 1000);
@@ -1288,6 +1320,7 @@
             } catch (error) {
                 console.error('編輯失敗:', error);
                 showLoading(false);
+                showAnotherButton = false;
                 showSuccessModal('修改成功!', '包子媽已經幫您更新囉~', '繼續加油!💪');
                 setTimeout(() => loadRecords(), 1000);
             }
@@ -1326,6 +1359,7 @@
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 showLoading(false);
+                showAnotherButton = false; // 刪除成功不顯示「再記一筆」
                 showSuccessModal('刪除成功!', '這筆記錄已經消失囉~', '');
                 
                 setTimeout(() => loadRecords(), 1000);
@@ -1333,6 +1367,7 @@
             } catch (error) {
                 console.error('刪除失敗:', error);
                 showLoading(false);
+                showAnotherButton = false;
                 showSuccessModal('刪除成功!', '這筆記錄已經消失囉~', '');
                 setTimeout(() => loadRecords(), 1000);
             }
@@ -1392,6 +1427,15 @@
             document.getElementById('modalTitle').textContent = title || random.title;
             document.getElementById('modalMessage').textContent = msg || random.msg;
             document.getElementById('modalSubmessage').textContent = sub !== undefined ? sub : random.sub;
+            
+            // 🔧 控制「再記一筆」按鈕顯示
+            const anotherBtn = document.getElementById('anotherBtn');
+            if (showAnotherButton) {
+                anotherBtn.style.display = 'block';
+            } else {
+                anotherBtn.style.display = 'none';
+            }
+            
             document.getElementById('successModal').classList.add('show');
         }
         
