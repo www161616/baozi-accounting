@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🥟 包子媽專屬記帳小秘書</title>
     
     <!-- LIFF SDK -->
@@ -38,6 +38,7 @@
             --shadow-card: 0 8px 32px rgba(255, 122, 154, 0.12);
             --shadow-button: 0 6px 20px rgba(255, 122, 154, 0.25);
         }
+        
         * {
             margin: 0;
             padding: 0;
@@ -45,90 +46,94 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* 🔧 修正 LINE LIFF 頁面滑動問題 */
-        html {
+        /* 🔧 防止 LINE LIFF 整頁滑動 */
+        html, body {
             position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: touch;
         }
         
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background: linear-gradient(180deg, var(--pink-lightest) 0%, var(--pink-light) 100%);
             color: var(--text-dark);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
         
-        /* 🔧 主要內容區域 - 可捲動 */
-        .main-container {
+        /* 🔧 可捲動的主容器 */
+        .scroll-container {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-            padding-bottom: 30px;
+            overscroll-behavior-y: contain;
         }
         
+        .content-wrapper {
+            padding-bottom: 40px;
+        }
+
         /* 頂部標題 */
         .header {
             background: linear-gradient(135deg, var(--pink-dark) 0%, var(--pink-accent) 50%, var(--pink-deep) 100%);
-            padding: 24px 20px 28px;
+            padding: 20px 20px 24px;
             text-align: center;
-            border-radius: 0 0 36px 36px;
+            border-radius: 0 0 32px 32px;
             box-shadow: var(--shadow-soft);
             position: relative;
-            flex-shrink: 0;
+            overflow: hidden;
         }
         .header::before {
             content: '🥟';
             position: absolute;
-            font-size: 100px;
+            font-size: 80px;
             opacity: 0.1;
-            top: -10px;
-            right: -10px;
+            top: -5px;
+            right: -5px;
         }
         .header h1 {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 900;
             color: white;
             text-shadow: 2px 2px 8px rgba(0,0,0,0.15);
         }
         .header .subtitle {
-            font-size: 16px;
+            font-size: 15px;
             color: rgba(255,255,255,0.9);
-            margin-top: 8px;
+            margin-top: 6px;
         }
+        
         /* 使用者卡片 */
         .user-card {
             background: var(--white);
-            margin: -16px 16px 16px;
-            padding: 16px 20px;
-            border-radius: 20px;
+            margin: -12px 16px 12px;
+            padding: 14px 18px;
+            border-radius: 18px;
             box-shadow: var(--shadow-card);
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             position: relative;
             z-index: 10;
             border: 2px solid var(--pink-light);
         }
         .user-avatar {
-            width: 56px;
-            height: 56px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: var(--pink-light);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
+            font-size: 24px;
             border: 3px solid var(--pink-dark);
             overflow: hidden;
             flex-shrink: 0;
@@ -138,46 +143,56 @@
             height: 100%;
             object-fit: cover;
         }
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
         .user-name {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .user-label {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-medium);
             margin-top: 2px;
         }
-        /* 分頁切換 */
+        
+        /* 🔧 分頁切換 - 修正版 */
         .tab-container {
             display: flex;
-            margin: 16px;
+            margin: 12px 16px;
             background: var(--white);
-            border-radius: 16px;
-            padding: 6px;
+            border-radius: 14px;
+            padding: 5px;
             box-shadow: var(--shadow-card);
-            gap: 0;
-            overflow: hidden;
+            border: 2px solid var(--pink-light);
         }
         .tab-btn {
             flex: 1;
-            padding: 14px 10px;
-            font-size: 17px;
+            padding: 12px 8px;
+            font-size: 16px;
             font-weight: 700;
             border: none;
             background: transparent;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s;
             font-family: inherit;
             color: var(--text-medium);
-            white-space: nowrap;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
         }
         .tab-btn.active {
             background: linear-gradient(135deg, var(--pink-accent), var(--pink-deep));
             color: white;
             box-shadow: var(--shadow-button);
         }
+        
         /* 頁面內容 */
         .page {
             display: none;
@@ -191,39 +206,41 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
         /* 表單卡片 */
         .form-card {
             background: var(--white);
-            padding: 24px 20px;
-            border-radius: 24px;
+            padding: 20px 18px;
+            border-radius: 20px;
             box-shadow: var(--shadow-card);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             border: 2px solid var(--pink-light);
         }
         .section-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--pink-accent);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
         .section-title .icon {
-            font-size: 24px;
+            font-size: 20px;
         }
+        
         /* 分類按鈕 */
         .category-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
         }
         .category-btn {
             background: var(--pink-lightest);
             border: 3px solid transparent;
-            border-radius: 16px;
-            padding: 16px 12px;
-            font-size: 18px;
+            border-radius: 14px;
+            padding: 14px 10px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--text-dark);
             cursor: pointer;
@@ -231,11 +248,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             font-family: inherit;
         }
         .category-btn .emoji {
-            font-size: 32px;
+            font-size: 28px;
         }
         .category-btn.active {
             border-color: var(--pink-accent);
@@ -244,31 +261,30 @@
         }
         .category-btn.food { background: var(--orange-light); }
         .category-btn.food.active { background: linear-gradient(135deg, #FFE8D6, #FFCFB3); border-color: var(--orange-accent); }
-        
         .category-btn.vegetable { background: var(--green-light); }
         .category-btn.vegetable.active { background: linear-gradient(135deg, #D6F5E3, #A8E6C3); border-color: var(--green-accent); }
-        
         .category-btn.fruit { background: var(--purple-light); }
         .category-btn.fruit.active { background: linear-gradient(135deg, #E8D6F5, #D4B3F0); border-color: var(--purple-accent); }
-        
         .category-btn.custom { background: var(--blue-light); }
         .category-btn.custom.active { background: linear-gradient(135deg, #D6E8F5, #B3D4F0); border-color: var(--blue-accent); }
+        
         /* 自訂分類輸入 */
         .custom-input-wrapper {
-            margin-top: 12px;
+            margin-top: 10px;
             display: none;
         }
         .custom-input-wrapper.show {
             display: block;
         }
+        
         /* 輸入框 */
         .text-input {
             width: 100%;
-            padding: 16px 18px;
-            font-size: 20px;
+            padding: 14px 16px;
+            font-size: 18px;
             font-weight: 600;
             border: 3px solid var(--pink-light);
-            border-radius: 14px;
+            border-radius: 12px;
             background: var(--pink-lightest);
             color: var(--text-dark);
             font-family: inherit;
@@ -279,26 +295,27 @@
             border-color: var(--pink-accent);
             background: var(--white);
         }
+        
         /* 金額輸入 */
         .amount-wrapper {
             position: relative;
         }
         .amount-prefix {
             position: absolute;
-            left: 18px;
+            left: 16px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 700;
             color: var(--pink-accent);
         }
         .amount-input {
             width: 100%;
-            padding: 18px 18px 18px 55px;
-            font-size: 28px;
+            padding: 16px 16px 16px 50px;
+            font-size: 26px;
             font-weight: 700;
             border: 3px solid var(--pink-light);
-            border-radius: 16px;
+            border-radius: 14px;
             background: var(--pink-lightest);
             color: var(--text-dark);
             font-family: inherit;
@@ -308,29 +325,31 @@
             border-color: var(--pink-accent);
             background: var(--white);
         }
+        
         /* 備註輸入 */
         .memo-input {
             width: 100%;
-            padding: 16px 18px;
-            font-size: 18px;
+            padding: 14px 16px;
+            font-size: 16px;
             border: 3px solid var(--pink-light);
-            border-radius: 14px;
+            border-radius: 12px;
             background: var(--pink-lightest);
             color: var(--text-dark);
             font-family: inherit;
             resize: none;
-            min-height: 80px;
+            min-height: 70px;
         }
         .memo-input:focus {
             outline: none;
             border-color: var(--pink-accent);
             background: var(--white);
         }
+        
         /* 拍照區域 */
         .photo-area {
             border: 3px dashed var(--pink-medium);
-            border-radius: 16px;
-            padding: 24px;
+            border-radius: 14px;
+            padding: 20px;
             text-align: center;
             cursor: pointer;
             background: var(--pink-lightest);
@@ -347,18 +366,18 @@
             background: var(--green-light);
         }
         .photo-icon {
-            font-size: 48px;
-            margin-bottom: 8px;
+            font-size: 40px;
+            margin-bottom: 6px;
         }
         .photo-text {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--text-medium);
         }
         .photo-preview {
             max-width: 100%;
-            max-height: 200px;
-            border-radius: 10px;
+            max-height: 180px;
+            border-radius: 8px;
             display: none;
         }
         .photo-preview.show {
@@ -368,32 +387,33 @@
             position: absolute;
             top: 8px;
             right: 8px;
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: var(--red-accent);
             color: white;
             border: none;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
             display: none;
+            align-items: center;
+            justify-content: center;
         }
         .remove-photo.show {
             display: flex;
-            align-items: center;
-            justify-content: center;
         }
         #photoInput {
             display: none;
         }
+        
         /* 日期輸入 */
         .date-input {
             width: 100%;
-            padding: 16px 18px;
-            font-size: 20px;
+            padding: 14px 16px;
+            font-size: 18px;
             font-weight: 600;
             border: 3px solid var(--pink-light);
-            border-radius: 14px;
+            border-radius: 12px;
             background: var(--pink-lightest);
             color: var(--text-dark);
             font-family: inherit;
@@ -402,23 +422,24 @@
             outline: none;
             border-color: var(--pink-accent);
         }
+        
         /* 提交按鈕 */
         .submit-btn {
             width: 100%;
-            padding: 20px;
-            font-size: 24px;
+            padding: 18px;
+            font-size: 22px;
             font-weight: 700;
             color: white;
             background: linear-gradient(135deg, var(--pink-accent), var(--pink-deep));
             border: none;
-            border-radius: 18px;
+            border-radius: 16px;
             cursor: pointer;
             box-shadow: var(--shadow-button);
             font-family: inherit;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             transition: all 0.3s;
             margin-bottom: 20px;
         }
@@ -431,6 +452,7 @@
             cursor: not-allowed;
             transform: none;
         }
+        
         /* 記錄列表 */
         .record-list {
             display: flex;
@@ -440,8 +462,8 @@
         }
         .record-item {
             background: var(--white);
-            border-radius: 18px;
-            padding: 18px;
+            border-radius: 16px;
+            padding: 16px;
             box-shadow: var(--shadow-card);
             border: 2px solid var(--pink-light);
         }
@@ -449,20 +471,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .record-category {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 20px;
+            gap: 6px;
+            font-size: 18px;
             font-weight: 700;
         }
         .record-category .emoji {
-            font-size: 28px;
+            font-size: 24px;
         }
         .record-amount {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 900;
             color: var(--pink-accent);
         }
@@ -471,8 +493,8 @@
             justify-content: space-between;
             align-items: center;
             color: var(--text-medium);
-            font-size: 16px;
-            margin-bottom: 12px;
+            font-size: 14px;
+            margin-bottom: 10px;
         }
         .record-photo-link {
             color: var(--blue-accent);
@@ -480,24 +502,24 @@
             font-weight: 600;
         }
         .record-memo {
-            font-size: 16px;
+            font-size: 14px;
             color: var(--text-medium);
-            padding: 10px;
+            padding: 8px 10px;
             background: var(--pink-lightest);
-            border-radius: 10px;
-            margin-bottom: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
         .record-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
         .action-btn {
             flex: 1;
-            padding: 12px;
-            font-size: 16px;
+            padding: 10px;
+            font-size: 14px;
             font-weight: 700;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             font-family: inherit;
             transition: all 0.3s;
@@ -510,24 +532,23 @@
             background: var(--red-light);
             color: var(--red-accent);
         }
-        .action-btn:hover {
-            transform: translateY(-2px);
-        }
+        
         /* 空記錄提示 */
         .empty-message {
             text-align: center;
-            padding: 60px 20px;
+            padding: 50px 20px;
             color: var(--text-medium);
         }
         .empty-message .icon {
-            font-size: 64px;
-            margin-bottom: 16px;
+            font-size: 56px;
+            margin-bottom: 12px;
         }
         .empty-message .text {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
         }
-        /* 成功彈窗 */
+        
+        /* 彈窗通用 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -546,10 +567,10 @@
         }
         .modal-content {
             background: var(--white);
-            border-radius: 28px;
-            padding: 36px 28px;
+            border-radius: 24px;
+            padding: 30px 24px;
             text-align: center;
-            max-width: 320px;
+            max-width: 300px;
             width: 100%;
             animation: popIn 0.3s ease;
         }
@@ -558,57 +579,55 @@
             to { opacity: 1; transform: scale(1); }
         }
         .modal-icon {
-            font-size: 72px;
-            margin-bottom: 16px;
+            font-size: 64px;
+            margin-bottom: 12px;
             animation: bounce 0.6s ease infinite alternate;
         }
         @keyframes bounce {
             from { transform: translateY(0); }
-            to { transform: translateY(-8px); }
+            to { transform: translateY(-6px); }
         }
         .modal-title {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 900;
             color: var(--pink-accent);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .modal-message {
-            font-size: 18px;
+            font-size: 16px;
             color: var(--text-dark);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .modal-submessage {
-            font-size: 16px;
+            font-size: 14px;
             color: var(--text-medium);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
         .modal-close-btn {
             width: 100%;
-            padding: 16px;
-            font-size: 20px;
+            padding: 14px;
+            font-size: 18px;
             font-weight: 700;
             color: white;
             background: linear-gradient(135deg, var(--green-accent), #4DAA7A);
             border: none;
-            border-radius: 14px;
+            border-radius: 12px;
             cursor: pointer;
             font-family: inherit;
         }
+        
         /* 確認刪除彈窗 */
-        .confirm-modal .modal-content {
-            background: var(--white);
-        }
         .confirm-buttons {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
         .confirm-btn {
             flex: 1;
-            padding: 14px;
-            font-size: 18px;
+            padding: 12px;
+            font-size: 16px;
             font-weight: 700;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             font-family: inherit;
         }
@@ -620,6 +639,52 @@
             background: var(--red-accent);
             color: white;
         }
+        
+        /* 編輯彈窗 */
+        .edit-modal .modal-content {
+            max-width: 340px;
+            text-align: left;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .edit-modal .modal-title {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .edit-field {
+            margin-bottom: 14px;
+        }
+        .edit-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 6px;
+            display: block;
+        }
+        .edit-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .edit-cancel-btn, .edit-save-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .edit-cancel-btn {
+            background: var(--pink-light);
+            color: var(--text-dark);
+        }
+        .edit-save-btn {
+            background: linear-gradient(135deg, var(--pink-accent), var(--pink-deep));
+            color: white;
+        }
+        
         /* 載入中 */
         .loading-overlay {
             position: fixed;
@@ -633,14 +698,14 @@
             justify-content: center;
             z-index: 999;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
         .loading-overlay.show {
             display: flex;
         }
         .loading-spinner {
-            width: 50px;
-            height: 50px;
+            width: 44px;
+            height: 44px;
             border: 4px solid var(--pink-light);
             border-top-color: var(--pink-accent);
             border-radius: 50%;
@@ -650,21 +715,22 @@
             to { transform: rotate(360deg); }
         }
         .loading-text {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
             color: var(--pink-accent);
         }
+        
         /* 錯誤提示 */
         .error-toast {
             position: fixed;
-            bottom: 80px;
+            bottom: 100px;
             left: 16px;
             right: 16px;
             background: var(--red-accent);
             color: white;
-            padding: 14px 18px;
-            border-radius: 14px;
-            font-size: 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 600;
             text-align: center;
             z-index: 1001;
@@ -678,56 +744,6 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* 編輯彈窗 */
-        .edit-modal .modal-content {
-            max-width: 360px;
-            text-align: left;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .edit-modal .modal-title {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .edit-field {
-            margin-bottom: 16px;
-        }
-        .edit-label {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-medium);
-            margin-bottom: 8px;
-            display: block;
-        }
-        .edit-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-        .edit-cancel-btn {
-            flex: 1;
-            padding: 14px;
-            font-size: 18px;
-            font-weight: 700;
-            background: var(--pink-light);
-            color: var(--text-dark);
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-family: inherit;
-        }
-        .edit-save-btn {
-            flex: 1;
-            padding: 14px;
-            font-size: 18px;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--pink-accent), var(--pink-deep));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-family: inherit;
-        }
     </style>
 </head>
 <body>
@@ -736,8 +752,10 @@
         <div class="loading-spinner"></div>
         <div class="loading-text">載入中...</div>
     </div>
+    
     <!-- 錯誤提示 -->
     <div class="error-toast" id="errorToast"></div>
+    
     <!-- 成功彈窗 -->
     <div class="modal-overlay" id="successModal">
         <div class="modal-content">
@@ -748,8 +766,9 @@
             <button class="modal-close-btn" onclick="closeModal('successModal')">好的!😊</button>
         </div>
     </div>
+    
     <!-- 確認刪除彈窗 -->
-    <div class="modal-overlay confirm-modal" id="confirmModal">
+    <div class="modal-overlay" id="confirmModal">
         <div class="modal-content">
             <div class="modal-icon">🤔</div>
             <div class="modal-title">確定要刪除嗎?</div>
@@ -760,143 +779,152 @@
             </div>
         </div>
     </div>
+    
     <!-- 編輯彈窗 -->
     <div class="modal-overlay edit-modal" id="editModal">
         <div class="modal-content">
             <div class="modal-title">✏️ 編輯記錄</div>
-            
             <div class="edit-field">
                 <label class="edit-label">分類</label>
                 <input type="text" class="text-input" id="editCategory">
             </div>
-            
             <div class="edit-field">
                 <label class="edit-label">金額</label>
                 <input type="number" class="text-input" id="editAmount">
             </div>
-            
             <div class="edit-field">
                 <label class="edit-label">日期</label>
                 <input type="date" class="text-input" id="editDate">
             </div>
-            
             <div class="edit-field">
                 <label class="edit-label">備註</label>
                 <textarea class="memo-input" id="editMemo"></textarea>
             </div>
-            
             <input type="hidden" id="editId">
-            
             <div class="edit-buttons">
                 <button class="edit-cancel-btn" onclick="closeModal('editModal')">取消</button>
                 <button class="edit-save-btn" onclick="saveEdit()">儲存</button>
             </div>
         </div>
     </div>
-    
-    <!-- 🔧 頂部標題 (固定不動) -->
-    <header class="header">
-        <h1>🥟 包子媽專屬記帳小秘書</h1>
-        <p class="subtitle">輕鬆記帳,生活更美好 ✨</p>
-    </header>
-    
-    <!-- 🔧 主要可捲動區域 -->
-    <div class="main-container">
-        <!-- 使用者卡片 -->
-        <div class="user-card">
-            <div class="user-avatar" id="userAvatar">👤</div>
-            <div>
-                <div class="user-name" id="userName">載入中...</div>
-                <div class="user-label">🔒 LINE 自動登入</div>
-            </div>
-        </div>
-        <!-- 分頁切換 -->
-        <div class="tab-container">
-            <button class="tab-btn active" id="tabAdd" onclick="switchTab('add')">➕ 新增記帳</button>
-            <button class="tab-btn" id="tabList" onclick="switchTab('list')">📋 查看記錄</button>
-        </div>
-        <!-- 新增記帳頁面 -->
-        <div class="page active" id="addPage">
-            <!-- 分類 -->
-            <div class="form-card">
-                <div class="section-title">
-                    <span class="icon">📂</span>
-                    選擇分類
-                </div>
-                <div class="category-grid">
-                    <button class="category-btn food" data-category="美食代購" onclick="selectCategory(this)">
-                        <span class="emoji">🍜</span>
-                        美食代購
-                    </button>
-                    <button class="category-btn vegetable" data-category="蔬菜" onclick="selectCategory(this)">
-                        <span class="emoji">🥬</span>
-                        蔬菜
-                    </button>
-                    <button class="category-btn fruit" data-category="水果" onclick="selectCategory(this)">
-                        <span class="emoji">🍎</span>
-                        水果
-                    </button>
-                    <button class="category-btn custom" data-category="自訂" onclick="selectCategory(this)">
-                        <span class="emoji">✏️</span>
-                        自訂
-                    </button>
-                </div>
-                <div class="custom-input-wrapper" id="customWrapper">
-                    <input type="text" class="text-input" id="customInput" placeholder="輸入分類名稱...">
+
+    <!-- 🔧 可捲動的容器 -->
+    <div class="scroll-container">
+        <div class="content-wrapper">
+            <!-- 頂部標題 -->
+            <header class="header">
+                <h1>🥟 包子媽專屬記帳小秘書</h1>
+                <p class="subtitle">輕鬆記帳,生活更美好 ✨</p>
+            </header>
+            
+            <!-- 使用者卡片 -->
+            <div class="user-card">
+                <div class="user-avatar" id="userAvatar">👤</div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">載入中...</div>
+                    <div class="user-label">🔒 LINE 自動登入</div>
                 </div>
             </div>
-            <!-- 金額 -->
-            <div class="form-card">
-                <div class="section-title">
-                    <span class="icon">💰</span>
-                    花費金額
-                </div>
-                <div class="amount-wrapper">
-                    <span class="amount-prefix">$</span>
-                    <input type="number" class="amount-input" id="amountInput" placeholder="0" inputmode="numeric">
-                </div>
+            
+            <!-- 🔧 分頁切換 -->
+            <div class="tab-container">
+                <button class="tab-btn active" id="tabAdd" onclick="switchTab('add')">
+                    <span>➕</span><span>新增記帳</span>
+                </button>
+                <button class="tab-btn" id="tabList" onclick="switchTab('list')">
+                    <span>📋</span><span>查看記錄</span>
+                </button>
             </div>
-            <!-- 備註 -->
-            <div class="form-card">
-                <div class="section-title">
-                    <span class="icon">📝</span>
-                    備註(選填)
+            
+            <!-- 新增記帳頁面 -->
+            <div class="page active" id="addPage">
+                <!-- 分類 -->
+                <div class="form-card">
+                    <div class="section-title">
+                        <span class="icon">📂</span>
+                        選擇分類
+                    </div>
+                    <div class="category-grid">
+                        <button class="category-btn food" data-category="美食代購" onclick="selectCategory(this)">
+                            <span class="emoji">🍜</span>
+                            美食代購
+                        </button>
+                        <button class="category-btn vegetable" data-category="蔬菜" onclick="selectCategory(this)">
+                            <span class="emoji">🥬</span>
+                            蔬菜
+                        </button>
+                        <button class="category-btn fruit" data-category="水果" onclick="selectCategory(this)">
+                            <span class="emoji">🍎</span>
+                            水果
+                        </button>
+                        <button class="category-btn custom" data-category="自訂" onclick="selectCategory(this)">
+                            <span class="emoji">✏️</span>
+                            自訂
+                        </button>
+                    </div>
+                    <div class="custom-input-wrapper" id="customWrapper">
+                        <input type="text" class="text-input" id="customInput" placeholder="輸入分類名稱...">
+                    </div>
                 </div>
-                <textarea class="memo-input" id="memoInput" placeholder="買了什麼、在哪裡買..."></textarea>
+                
+                <!-- 金額 -->
+                <div class="form-card">
+                    <div class="section-title">
+                        <span class="icon">💰</span>
+                        花費金額
+                    </div>
+                    <div class="amount-wrapper">
+                        <span class="amount-prefix">$</span>
+                        <input type="number" class="amount-input" id="amountInput" placeholder="0" inputmode="numeric">
+                    </div>
+                </div>
+                
+                <!-- 備註 -->
+                <div class="form-card">
+                    <div class="section-title">
+                        <span class="icon">📝</span>
+                        備註(選填)
+                    </div>
+                    <textarea class="memo-input" id="memoInput" placeholder="買了什麼、在哪裡買..."></textarea>
+                </div>
+                
+                <!-- 拍照 -->
+                <div class="form-card">
+                    <div class="section-title">
+                        <span class="icon">📸</span>
+                        拍照(選填)
+                    </div>
+                    <div class="photo-area" id="photoArea" onclick="document.getElementById('photoInput').click()">
+                        <div class="photo-icon" id="photoIcon">📷</div>
+                        <div class="photo-text" id="photoText">點擊拍照或選擇照片</div>
+                        <img class="photo-preview" id="photoPreview">
+                        <button class="remove-photo" id="removePhoto" onclick="removePhoto(event)">✕</button>
+                    </div>
+                    <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
+                </div>
+                
+                <!-- 日期 -->
+                <div class="form-card">
+                    <div class="section-title">
+                        <span class="icon">📅</span>
+                        日期
+                    </div>
+                    <input type="date" class="date-input" id="dateInput">
+                </div>
+                
+                <!-- 提交 -->
+                <button class="submit-btn" id="submitBtn" onclick="submitRecord()">
+                    ✅ 確認記帳
+                </button>
             </div>
-            <!-- 拍照 -->
-            <div class="form-card">
-                <div class="section-title">
-                    <span class="icon">📸</span>
-                    拍照(選填)
-                </div>
-                <div class="photo-area" id="photoArea" onclick="document.getElementById('photoInput').click()">
-                    <div class="photo-icon" id="photoIcon">📷</div>
-                    <div class="photo-text" id="photoText">點擊拍照或選擇照片</div>
-                    <img class="photo-preview" id="photoPreview">
-                    <button class="remove-photo" id="removePhoto" onclick="removePhoto(event)">✕</button>
-                </div>
-                <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="handlePhoto(event)">
-            </div>
-            <!-- 日期 -->
-            <div class="form-card">
-                <div class="section-title">
-                    <span class="icon">📅</span>
-                    日期
-                </div>
-                <input type="date" class="date-input" id="dateInput">
-            </div>
-            <!-- 提交 -->
-            <button class="submit-btn" id="submitBtn" onclick="submitRecord()">
-                ✅ 確認記帳
-            </button>
-        </div>
-        <!-- 查看記錄頁面 -->
-        <div class="page" id="listPage">
-            <div class="record-list" id="recordList">
-                <div class="empty-message">
-                    <div class="icon">📭</div>
-                    <div class="text">載入中...</div>
+            
+            <!-- 查看記錄頁面 -->
+            <div class="page" id="listPage">
+                <div class="record-list" id="recordList">
+                    <div class="empty-message">
+                        <div class="icon">📭</div>
+                        <div class="text">載入中...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -966,7 +994,6 @@
         // 分頁切換
         // ==========================================
         function switchTab(tab) {
-            // 重置所有按鈕和頁面
             document.getElementById('tabAdd').classList.remove('active');
             document.getElementById('tabList').classList.remove('active');
             document.getElementById('addPage').classList.remove('active');
@@ -980,6 +1007,9 @@
                 document.getElementById('listPage').classList.add('active');
                 loadRecords();
             }
+            
+            // 捲動到頂部
+            document.querySelector('.scroll-container').scrollTop = 0;
         }
         
         // ==========================================
@@ -1147,7 +1177,6 @@
             };
             
             listContainer.innerHTML = allRecords.map(record => {
-                // 處理照片連結顯示
                 let photoDisplay = '';
                 if (record.photo) {
                     if (record.photo.startsWith('http')) {
