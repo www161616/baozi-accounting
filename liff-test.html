@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥟 LIFF 登入測試</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <!-- 除錯工具 - 可以在手機上看 console -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .info-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .info-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+            word-break: break-all;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: block;
+            border: 4px solid #667eea;
+        }
+        .log-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .log-item {
+            margin-bottom: 5px;
+        }
+        .emoji {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="emoji">🥟</div>
+        <h1>LIFF 登入測試</h1>
+        
+        <div id="status" class="status loading">載入中...</div>
+        
+        <div id="info" class="info-box" style="display: none;">
+            <!-- 使用者資訊會顯示在這裡 -->
+        </div>
+        
+        <div class="log-box">
+            <div id="logs">
+                <div class="log-item">📝 等待初始化...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const LIFF_ID = '2009005986-soaaJVOr';
+        
+        // 紀錄訊息
+        function addLog(msg, type = 'info') {
+            const logs = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            const emoji = type === 'error' ? '❌' : type === 'success' ? '✅' : '📝';
+            logs.innerHTML += `<div class="log-item">[${time}] ${emoji} ${msg}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(msg);
+        }
+        
+        // 更新狀態
+        function updateStatus(msg, type = 'loading') {
+            const status = document.getElementById('status');
+            status.textContent = msg;
+            status.className = `status ${type}`;
+        }
+        
+        // 顯示使用者資訊
+        function showUserInfo(profile) {
+            const infoBox = document.getElementById('info');
+            infoBox.style.display = 'block';
+            
+            infoBox.innerHTML = `
+                ${profile.pictureUrl ? `<img src="${profile.pictureUrl}" class="avatar" alt="avatar">` : ''}
+                
+                <div class="info-item">
+                    <div class="info-label">顯示名稱</div>
+                    <div class="info-value">${profile.displayName}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">User ID</div>
+                    <div class="info-value">${profile.userId}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">狀態訊息</div>
+                    <div class="info-value">${profile.statusMessage || '(無)'}</div>
+                </div>
+            `;
+        }
+        
+        // 初始化 LIFF
+        async function initLiff() {
+            try {
+                addLog('開始初始化 LIFF...');
+                updateStatus('正在初始化...', 'loading');
+                
+                // 初始化
+                await liff.init({ liffId: LIFF_ID });
+                addLog('LIFF 初始化成功!', 'success');
+                
+                // 檢查登入狀態
+                if (!liff.isLoggedIn()) {
+                    addLog('偵測到未登入狀態');
+                    updateStatus('未登入,準備跳轉到登入頁面...', 'loading');
+                    addLog('3 秒後自動跳轉到登入頁面');
+                    
+                    setTimeout(() => {
+                        addLog('跳轉到 LINE 登入頁面', 'success');
+                        liff.login();
+                    }, 3000);
+                    return;
+                }
+                
+                addLog('已登入!正在取得使用者資料...', 'success');
+                
+                // 取得使用者資料
+                const profile = await liff.getProfile();
+                addLog('成功取得使用者資料!', 'success');
+                addLog(`使用者名稱: ${profile.displayName}`);
+                addLog(`User ID: ${profile.userId}`);
+                
+                // 顯示資訊
+                updateStatus('✅ 登入成功!', 'success');
+                showUserInfo(profile);
+                
+                // 取得其他資訊
+                addLog('--- LIFF 環境資訊 ---');
+                addLog(`OS: ${liff.getOS()}`);
+                addLog(`語言: ${liff.getLanguage()}`);
+                addLog(`版本: ${liff.getVersion()}`);
+                addLog(`是否在 LINE 中: ${liff.isInClient()}`);
+                addLog(`是否已登入: ${liff.isLoggedIn()}`);
+                
+            } catch (error) {
+                addLog(`錯誤: ${error.toString()}`, 'error');
+                updateStatus(`❌ 錯誤: ${error.message}`, 'error');
+                
+                // 詳細錯誤資訊
+                addLog('--- 錯誤詳情 ---', 'error');
+                addLog(`錯誤訊息: ${error.message}`, 'error');
+                addLog(`錯誤堆疊: ${error.stack}`, 'error');
+            }
+        }
+        
+        // 頁面載入完成後初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            addLog('頁面載入完成');
+            addLog(`LIFF ID: ${LIFF_ID}`);
+            addLog(`目前網址: ${window.location.href}`);
+            initLiff();
+        });
+    </script>
+</body>
+</html>
