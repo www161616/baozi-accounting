@@ -155,11 +155,13 @@
             border-radius: 16px;
             padding: 6px;
             box-shadow: var(--shadow-card);
+            gap: 0;
+            overflow: hidden;
         }
         .tab-btn {
             flex: 1;
-            padding: 14px;
-            font-size: 18px;
+            padding: 14px 10px;
+            font-size: 17px;
             font-weight: 700;
             border: none;
             background: transparent;
@@ -168,6 +170,8 @@
             transition: all 0.3s;
             font-family: inherit;
             color: var(--text-medium);
+            white-space: nowrap;
+            text-align: center;
         }
         .tab-btn.active {
             background: linear-gradient(135deg, var(--pink-accent), var(--pink-deep));
@@ -808,8 +812,8 @@
         </div>
         <!-- 分頁切換 -->
         <div class="tab-container">
-            <button class="tab-btn active" onclick="switchTab('add')">➕ 新增記帳</button>
-            <button class="tab-btn" onclick="switchTab('list')">📋 查看記錄</button>
+            <button class="tab-btn active" id="tabAdd" onclick="switchTab('add')">➕ 新增記帳</button>
+            <button class="tab-btn" id="tabList" onclick="switchTab('list')">📋 查看記錄</button>
         </div>
         <!-- 新增記帳頁面 -->
         <div class="page active" id="addPage">
@@ -962,13 +966,17 @@
         // 分頁切換
         // ==========================================
         function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            // 重置所有按鈕和頁面
+            document.getElementById('tabAdd').classList.remove('active');
+            document.getElementById('tabList').classList.remove('active');
+            document.getElementById('addPage').classList.remove('active');
+            document.getElementById('listPage').classList.remove('active');
+            
             if (tab === 'add') {
-                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('tabAdd').classList.add('active');
                 document.getElementById('addPage').classList.add('active');
             } else {
-                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('tabList').classList.add('active');
                 document.getElementById('listPage').classList.add('active');
                 loadRecords();
             }
