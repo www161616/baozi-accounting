@@ -719,6 +719,11 @@
             font-weight: 600;
             color: var(--pink-accent);
         }
+        .loading-subtext {
+            font-size: 14px;
+            color: var(--text-medium);
+            margin-top: 8px;
+        }
         
         /* 錯誤提示 */
         .error-toast {
@@ -750,7 +755,8 @@
     <!-- 載入中 -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
-        <div class="loading-text">載入中...</div>
+        <div class="loading-text" id="loadingText">載入中...</div>
+        <div class="loading-subtext" id="loadingSubtext"></div>
     </div>
     
     <!-- 錯誤提示 -->
@@ -1034,23 +1040,42 @@
         function handlePhoto(event) {
             const file = event.target.files[0];
             if (!file) return;
+            
+            // 顯示處理中
+            document.getElementById('photoText').textContent = '處理中...';
+            
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const maxWidth = 800;
+                    // 🔧 縮小尺寸：最大 600px（原本 800px）
+                    const maxWidth = 600;
+                    const maxHeight = 600;
                     let width = img.width;
                     let height = img.height;
-                    if (width > maxWidth) {
-                        height = (height * maxWidth) / width;
-                        width = maxWidth;
+                    
+                    // 等比例縮放
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = (width * maxHeight) / height;
+                            height = maxHeight;
+                        }
                     }
+                    
                     canvas.width = width;
                     canvas.height = height;
                     canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     
-                    photoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    // 🔧 降低品質：0.5（原本 0.7）- 大幅減少檔案大小
+                    photoBase64 = canvas.toDataURL('image/jpeg', 0.5);
+                    
+                    console.log('📸 照片大小: ' + Math.round(photoBase64.length / 1024) + ' KB');
                     
                     document.getElementById('photoPreview').src = photoBase64;
                     document.getElementById('photoPreview').classList.add('show');
@@ -1112,10 +1137,15 @@
             };
 
             try {
-                showLoading(true);
+                // 🔧 如果有照片，顯示上傳提示
+                const hasPhoto = photoBase64.length > 500;
+                showLoading(true, hasPhoto);
                 document.getElementById('submitBtn').disabled = true;
                 
                 console.log('📤 準備送出資料...');
+                if (hasPhoto) {
+                    console.log('📸 照片大小: ' + Math.round(photoBase64.length / 1024) + ' KB');
+                }
                 
                 const formData = new URLSearchParams();
                 formData.append('data', JSON.stringify(data));
@@ -1332,8 +1362,15 @@
         // ==========================================
         // UI 輔助
         // ==========================================
-        function showLoading(show) {
+        function showLoading(show, hasPhoto = false) {
             document.getElementById('loadingOverlay').classList.toggle('show', show);
+            if (show && hasPhoto) {
+                document.getElementById('loadingText').textContent = '上傳中...';
+                document.getElementById('loadingSubtext').textContent = '照片上傳需要幾秒鐘 📸';
+            } else if (show) {
+                document.getElementById('loadingText').textContent = '載入中...';
+                document.getElementById('loadingSubtext').textContent = '';
+            }
         }
         
         function showError(msg) {
