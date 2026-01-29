@@ -180,62 +180,134 @@
         // 初始化 LIFF
         async function initLiff() {
             try {
-                addLog('開始初始化 LIFF...');
-                updateStatus('正在初始化...', 'loading');
+                addLog('=== 環境檢查 ===');
+                addLog(`LIFF ID: ${LIFF_ID}`);
+                addLog(`目前網址: ${window.location.href}`);
+                addLog(`User Agent: ${navigator.userAgent}`);
+                addLog(`=== 開始初始化 ===`);
+                
+                updateStatus('正在初始化 LIFF...', 'loading');
+                
+                // 檢查 liff 物件是否存在
+                if (typeof liff === 'undefined') {
+                    throw new Error('LIFF SDK 未載入!請檢查網路連線');
+                }
+                addLog('✓ LIFF SDK 已載入');
                 
                 // 初始化
+                addLog('正在呼叫 liff.init()...');
                 await liff.init({ liffId: LIFF_ID });
-                addLog('LIFF 初始化成功!', 'success');
+                addLog('✓ liff.init() 成功!', 'success');
                 
                 // 檢查登入狀態
-                if (!liff.isLoggedIn()) {
-                    addLog('偵測到未登入狀態');
+                const isLoggedIn = liff.isLoggedIn();
+                addLog(`登入狀態: ${isLoggedIn ? '已登入' : '未登入'}`);
+                
+                if (!isLoggedIn) {
+                    addLog('=== 準備登入 ===');
                     updateStatus('未登入,準備跳轉到登入頁面...', 'loading');
-                    addLog('3 秒後自動跳轉到登入頁面');
+                    addLog('⚠️ 偵測到未登入狀態');
+                    addLog('將在 3 秒後跳轉到 LINE 登入頁面');
                     
-                    setTimeout(() => {
-                        addLog('跳轉到 LINE 登入頁面', 'success');
-                        liff.login();
-                    }, 3000);
+                    // 檢查是否在 LINE 中
+                    const isInClient = liff.isInClient();
+                    addLog(`是否在 LINE 內: ${isInClient}`);
+                    
+                    if (!isInClient) {
+                        addLog('⚠️ 你不是在 LINE 中開啟此頁面!');
+                        addLog('請在 LINE 聊天室中傳送 LIFF 網址並點擊開啟');
+                        updateStatus('⚠️ 請在 LINE 中開啟此頁面', 'error');
+                        return;
+                    }
+                    
+                    let countdown = 3;
+                    const countdownInterval = setInterval(() => {
+                        countdown--;
+                        updateStatus(`${countdown} 秒後跳轉...`, 'loading');
+                        if (countdown === 0) {
+                            clearInterval(countdownInterval);
+                            addLog('執行 liff.login()...', 'success');
+                            liff.login();
+                        }
+                    }, 1000);
+                    
                     return;
                 }
                 
-                addLog('已登入!正在取得使用者資料...', 'success');
+                addLog('=== 已登入,取得使用者資料 ===', 'success');
                 
                 // 取得使用者資料
+                addLog('正在呼叫 liff.getProfile()...');
                 const profile = await liff.getProfile();
-                addLog('成功取得使用者資料!', 'success');
+                addLog('✓ 成功取得使用者資料!', 'success');
                 addLog(`使用者名稱: ${profile.displayName}`);
                 addLog(`User ID: ${profile.userId}`);
+                if (profile.statusMessage) {
+                    addLog(`狀態訊息: ${profile.statusMessage}`);
+                }
+                if (profile.pictureUrl) {
+                    addLog(`頭像網址: ${profile.pictureUrl}`);
+                }
                 
                 // 顯示資訊
                 updateStatus('✅ 登入成功!', 'success');
                 showUserInfo(profile);
                 
                 // 取得其他資訊
-                addLog('--- LIFF 環境資訊 ---');
-                addLog(`OS: ${liff.getOS()}`);
+                addLog('=== LIFF 環境資訊 ===');
+                addLog(`作業系統: ${liff.getOS()}`);
                 addLog(`語言: ${liff.getLanguage()}`);
-                addLog(`版本: ${liff.getVersion()}`);
+                addLog(`LIFF 版本: ${liff.getVersion()}`);
                 addLog(`是否在 LINE 中: ${liff.isInClient()}`);
                 addLog(`是否已登入: ${liff.isLoggedIn()}`);
                 
+                // 取得 Access Token (用於 API 呼叫)
+                try {
+                    const accessToken = liff.getAccessToken();
+                    addLog(`Access Token: ${accessToken ? accessToken.substring(0, 20) + '...' : '無'}`);
+                } catch (e) {
+                    addLog('無法取得 Access Token');
+                }
+                
+                addLog('=== 完成! ===', 'success');
+                
             } catch (error) {
-                addLog(`錯誤: ${error.toString()}`, 'error');
+                addLog('=== 發生錯誤! ===', 'error');
+                addLog(`錯誤類型: ${error.name}`, 'error');
+                addLog(`錯誤訊息: ${error.message}`, 'error');
                 updateStatus(`❌ 錯誤: ${error.message}`, 'error');
                 
                 // 詳細錯誤資訊
                 addLog('--- 錯誤詳情 ---', 'error');
-                addLog(`錯誤訊息: ${error.message}`, 'error');
-                addLog(`錯誤堆疊: ${error.stack}`, 'error');
+                if (error.stack) {
+                    const stackLines = error.stack.split('\n').slice(0, 3);
+                    stackLines.forEach(line => addLog(line, 'error'));
+                }
+                
+                // 常見錯誤提示
+                addLog('--- 可能的原因 ---', 'error');
+                if (error.message.includes('LIFF ID')) {
+                    addLog('• LIFF ID 不正確', 'error');
+                    addLog('• 請到 LINE Developers 確認 LIFF ID', 'error');
+                } else if (error.message.includes('Endpoint')) {
+                    addLog('• Endpoint URL 設定錯誤', 'error');
+                    addLog('• 請確認 LINE Developers 的 Endpoint URL 和目前網址一致', 'error');
+                    addLog(`• 目前網址: ${window.location.href}`, 'error');
+                } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                    addLog('• 網路連線問題', 'error');
+                    addLog('• 請檢查網路連線', 'error');
+                } else {
+                    addLog('• 未知錯誤', 'error');
+                    addLog('• 請將此錯誤訊息截圖並詢問開發者', 'error');
+                }
             }
         }
         
         // 頁面載入完成後初始化
         window.addEventListener('DOMContentLoaded', () => {
+            addLog('🥟 包子媽記帳測試頁面');
             addLog('頁面載入完成');
-            addLog(`LIFF ID: ${LIFF_ID}`);
-            addLog(`目前網址: ${window.location.href}`);
+            addLog(`目前時間: ${new Date().toLocaleString()}`);
             initLiff();
         });
     </script>
